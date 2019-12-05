@@ -1,0 +1,182 @@
+---
+title: "Set Comparisons"
+author: "T3hasiangod"
+date: "11/26/2019"
+output: 
+  html_document:
+      toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this lecture video, we'll be going over how to compare various sets against each other. We'll be focusing on sets whose 5-piece effects include things that cannot be directly entered into the ability metric formulas, and how we can compare those effects to both each other and effects that can be entered into the ability metric formula.
+
+# The Ability Metric: Our Primary Tool
+
+Recall the ability metric: $Ability\;Metric = (Magicka + 10.5 * Spell\;Damage) * Attacker\;Bonus * (1 - Mitigation) * (1 + Spell\;Crit * Crit\;Damage)$. This is the formula that we will be using today to compare various sets to each other.
+
+The easiest way to use the ability metric is to make a percentage comparison against the two sets. For example, if we wanted to compare Julianos to Mother's Sorrow, we would simply examine the armor bonuses, adjust our ability metrics, and then take our ratios of those adjustments. In this example, both sets have a Max Magicka bonus and 2 Spell Critical bonuses, so we're mainly just focusing on the two 5-piece bonuses. Julianos has 300 Spell Damage, while Mother's Sorrow adds approximately 8.7 percent Spell Critical. If we assume we have 35000 Max Magicka and 3000 Spell Damage (for our Effective Spell Damage calculations), 55 percent crit chance with Julianos, and 99 percent crit damage, we get the following ratio. Note that we do need to multiply Julianos's Spell Damage bonus by 1.3 to account for Major and Minor Sorcery.
+
+```{r}
+((35000/10.5 + 3000 + 300 * 1.3) * (1 + 0.55 * 0.99))/((35000/10.5 + 3000) * (1 + 0.637 * 0.99))
+```
+
+So we can determine that Julianos, with these conditions, is about 0.5 percent stronger than Mother's Sorrow. We can do this for any combination of sets, so long as they do not deal damage via a proc condition.
+
+# What about proc sets?
+
+This was touched upon at the beginning of this lecture, as well as the ability metric lecture, that the ability metric does not account for damage from procs. However, we can still use it to help use compare these proc sets. We'll use three commonly discussed damage proc sets across the meta: Relequen, Undaunted Infiltrator, and Red Mountain. We will be using the *base* value given for these sets; that is, we will examine them without taking into consideration modification from CPs and buffs. We will be comparing each set to Hunding's Rage or Law of Julianos for our baseline.
+
+## Red Mountain: A basic step forward
+
+Let's start with Red Mountain. Here are the set bonuses:
+
+2 items: Adds 129 Weapon Damage
+
+3 items: Adds 1096 Max Stamina
+
+4 items: Adds 833 Weapon Critical
+
+5 items: When you deal damage with a Weapon ability, you have a 10% chance to spawn a volcano that erupts after 1 second, launching liquid hot lava at the closest enemy dealing 8400 Flame Damage. This effect can occur once every 2 seconds.
+
+As we can see, the set bonuses and the 5-piece damage proc seem to be pretty strong. But the 5-piece doesn't really fit into the ability metric equation very well. So how do we examine this?
+
+First, we'll take the armor bonuses from Red Mountain and compare them to Hunding's Rage. Hunding's lacks the Weapon Damage, replacing it with a Weapon Critical bonus. So let's take a look at the Ability Metric comparison to see the difference before we take Red Mountain's 5-piece into consideration.
+
+```{r}
+((35000/10.5 + 4000 + 300 * 1.48) * (1 + 0.638 * 0.95))/((35000/10.5 + 4000 + 129 * 1.48) * (1 + 0.6 * 0.95))
+```
+
+So right now, we can see that Hunding's is about 5.7 percent stronger than Red Mountain before we take into consideration its 5-piece effect. To assess the 5-piece effect, we need to first figure out how much damage it is able to do per second. Given that it deals 8400 damage every 2 seconds if it procs off cooldown, this gives us a base DPS of 4200 (8400/2). 
+
+With that value, we can then use the following equation to determine the breakeven point. This breakeven point is the DPS we would need to hit in order for Red Mountain to be stronger than Hunding's Rage. 
+
+Here's what this formula is stating. The DPS we can expect from Red Mountain (4200) is an additional amount of DPS from what we are hitting (x). Hunding's is able to provide an additional 5.74 percent higher damage (0.057402) compared to Red Mountain (1). If we then set the ratio of that DPS increase from Hunding's Rage (0.057402/1) equal to the ratio of the DPS increase that we get from Red Mountain (4200/x), then we'll get our breakeven point.
+
+$Breakeven\ Point: 4200/x = 0.057402/1$
+
+$0.057402x = 4200$
+
+$x=4200/0.057402$
+
+```{r}
+4200/0.057402
+```
+
+Using this formula, we see that we would need to hit about 73,168 DPS with Hunding's Rage in order for it to be stronger than Red Mountain. In this specific instance, it may be better off running Red Mountain for some individuals if they aren't able to hit that threshold. For very strong players though, Red Mountain will end up being weaker. 
+
+Now naturally, this is just base damage. We can calculate our new breakeven point by including CP and other buffs. To do this, we simply take the damage proc value on the base set, in this case 8400, and multiply it by our CP modifiers and our damage done and damage taken modifiers. Basically, we just multiply our damage proc by our Attacker Bonus term from our Ability Metric calculator. We don't include our Effective Max Stamina/Magicka nor our Crit Modifier, as damage from proc sets are unaffected by Spell Damage, Max Magicka, and Spell Critical. So in this case, let's assume we're getting 21 percent from Master-at-Arms, and we have Minor Slayer and Minor Berserk. This changes the math as follows.
+
+```{r}
+(8400 * 1.21 * 1.13)/2
+5742/0.057402
+```
+
+Now that we've added in our CP and buffs to Red Mountain's damage, in order for Hunding's Rage to be stronger than Red Mountain, we'd have to hit just over 100k in Hunding's Rage. This is to be expected: the DPS we're getting from Red Mountain went up so Hunding's Rage has to work a bit harder to meet that percentage. 
+
+But we need to add in another factor: effective ability cooldown. Red Mountain has a 2 second internal cooldown, but the proc damage is not guaranteed to occur on the proc condition. It has a 10 percent chance to proc on damage from a Weapon ability. So while it is possible to get it to proc on that 2 second cooldown, in reality, it's going to proc less often. Maybe it takes an average of 3 seconds between procs, rather than 2 seconds. How does that change our numbers?
+
+```{r}
+(8400 * 1.21 * 1.13)/3
+3828/0.057402
+```
+
+We can see that adding in just 1 second brought us from 100k as our breakeven point to just 66,687, which is a bit easier to do with Hunding's Rage! With this in mind, it might be better to run Hunding's Rage if that damage proc is only going off every 3 to 4 seconds, rather than run Red Mountain.
+
+## Relequen: The King of Proc Sets
+
+We can then use the principles from above to see just how strong Relequen is. Here is the Perfected version of Relequen.
+
+2 items: Adds 833 Weapon Critical
+
+3 items: Gain Minor Slayer at all times, increasing your damage done to Dungeon, Trial, and Arena Monsters by 5%.
+
+4 items: Adds 833 Weapon Critical
+
+5 items: Adds 1096 Maximum Stamina
+
+5 items: Your Light and Heavy attacks apply a stack of harmful winds to your target for 5 seconds. Harmful winds deal 200 Physical Damage every 1 second. 20 stacks max.
+
+Compared to Hunding's Rage, we're getting Minor Slayer and the Relequen effect. So just from the Minor Slayer, we'd be seeing a 5 percent increase in damage output. Let's use the same principles as above. With the full 20 stacks of Relequen, we're dealing 4000 damage per second.
+
+```{r}
+((35000/10.5 + 4000 + 300 * 1.48))/((35000/10.5 + 4000) * (1 + 0.05))
+4000/0.01
+```
+
+Our calculations for our base Relequen value is pretty straightforward. We'd need to hit a whopping ***400k*** with Hunding's Rage in order for it to be stronger than Relequen. That Minor Slayer bonus is really driving Relequen up, causing the percentage difference to be much smaller here than it was with Red Mountain. But what about when we add in CP and buffs? What sort of ridiculous DPS would we need to hit for Hunding's Rage to be stronger? Let's assume we're able to get 20 percent from Thaumaturge, 11 percent from Mighty, and we're getting Minor Berserk on top of the Minor Slayer.
+
+```{r}
+200 * (1 + 0.2 + 0.11) * (1 + 0.05 + 0.08) * 20
+5921/0.01
+```
+
+well then, I don't know anybody who is able to hit ***592,100 DPS*** using Hunding's Rage. 
+
+What also makes Relequen so powerful is the fact that with good practice and weaving, you're able to maintain this proc damage fairly well on many fights in the game. Compared to Red Mountain, which has a proc chance associated with it, Relequen is more consistent. With Red Mountain, as mentioned in that section, we also have to take into consideration the time between procs, which is almost certainly going to be longer than the 2 second cooldown.
+
+## Undaunted Infiltrator: Flat Bonuses and Why They Suck
+
+Now to Undaunted Infiltrator. This is a set that's a bit different because it adds a flat amount of damage to an existing ability, rather than deal damage via the set. This changes things a bit, mainly because the flat amount of damage it provides cannot be directly modified by CP or other buffs. Instead, the damage is added on to the damage 
+
+Here are the bonuses for Undaunted Infiltrator. 
+
+2 items: Adds 1096 Maximum Magicka
+
+3 items: Adds 1096 Maximum Magicka
+
+4 items: Adds 833 Weapon Critical
+
+5 items: When you use an ability that costs Magicka, your Light Attacks deal an additional 774 damage and Heavy Attacks deal an additional 1161 damage for 10 seconds.
+
+This set is commonly used with Lightning Staves, as the 5-piece applies the bonus to all 4 ticks of the Heavy Attack. Comparing this set with Julianos, it has one additional Max Magicka bonus, but Julianos has 2 Spell Crit bonuses.
+
+```{r}
+((35000/10.5 + 3000 + 300 * 1.3) * (1 + 0.676 * 0.95))/((35000/10.5 + (1096 * 1.38)/10.5 + 3000) * (1 + 0.6 * 0.95))
+```
+
+So we can see here than Julianos provides an additional 8.5 percent increase in damage compared to Undaunted Infiltrator with our assumptions. But what about that 5-piece? Since the bonus is a flat increase that is added on directly to our damage, it's pretty easy to figure out the breakeven point.
+
+```{r}
+1161 * 4/0.085705
+```
+
+This gives us a breakeven point of 54,185 DPS with Julianos before Julianos becomes stronger than Undaunted Infiltrator. Why is this so low? Well, it's mostly because Undaunted Infiltrator's bonus is not affected by CP modifiers or other buffs. It's a flat bonus, so it isn't able to be boosted like Red Mountain or Relequen from above. Hence, many sets that just add flat bonuses are quite weak compared to some other damage proc sets.
+
+## Damage Proc versus Damage Proc?
+
+How about comparing two damage proc sets against each other? Well, that’s actually as straightforward as you might think! We first compare the sets without their 5-piece bonuses, then we directly compare the 5-piece bonuses against each other. Let’s examine Alkosh and Relequen, since they are two comparable damage proc sets. Here are the set bonuses for Alkosh:
+
+2 items: Adds 833 Weapon Critical
+
+3 items: Gain Minor Slayer at all times, increasing your damage done to Dungeon, Trial, and Arena Monsters by 5%.
+
+4 items: Adds 129 Weapon Damage
+
+5 items: When you activate a synergy, you send a shockwave from your position that deals 1720 Physical Damage and an additional 12040 Physical Damage over 10 seconds. Reduces the Physical Resistance and Spell Resistance of any enemy hit by 3010 for 10 seconds.
+
+Perfected Relequen has 1 additional Weapon Crit bonus and a Max Stamina bonus instead of a Weapon Damage bonus. So if we go ahead and compare the sets without the 5-piece proc damage, we get the following.
+
+```{r}
+((35000/10.5 + 4000 + (1096 * 1.3)/10.5) * (1 + 0.638 * 0.95))/((35000/10.5 + 4000 + 129 * 1.48) * (1 + 0.6 * 0.95))
+```
+
+So we see that Relequen is stronger by 1.5 percent without taking the proc damage in to account. Now let’s examine the proc damage. Alkosh is able to deal 1376 DPS using the base damage if we get it to proc on cooldown (1720/10 + 12040/10), while Relequen can deal 4000 DPS using the base damage (200 * 20). Note that we are ignoring the fact that you can stack Alkosh stacks on each other, but mathematically, it would require stacking 4 synergies on each other to get up to Relequen DPS. 
+
+But what if Alkosh was stronger than Relequen? Let’s say, hypothetically, that Alkosh was stronger than Relequen by 1.5 percent. Yet Alkosh’s damage proc is lower. How do we resolve this?
+
+We first take the difference in DPS from the two damage procs. In this instance, we would have 4000 – 1376 = 2624. This is the value that we use for our familiar equation from above.
+
+```{r}
+2624/0.015
+```
+
+So in this instance, you would have to deal 174,933 DPS in Alkosh to beat Relequen. Remember when I said Relequen was king? This hasn’t changed at all.
+
+# Conclusion
+
+So in conclusion, we've covered how we can take proc sets and compare them to other sets using the ability metric. We are able to determine their expected DPS contribution and work out a breakeven point by using our ability metric comparison formula. We find that while some proc sets can be very powerful, for the most part, proc sets tend to be overshadowed by sets that provide bonuses to crit chance or Spell/Weapon damage.

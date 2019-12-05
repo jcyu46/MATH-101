@@ -1,0 +1,183 @@
+---
+title: 'MATH 101: Explaining the Ability Metric'
+author: "T3hasiangod"
+date: "11/17/2019"
+output: 
+  html_document:
+      toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this "lecture series", I'll be going over the mathematics behind ESO. Surprisingly, a lot of people have doubts about the veracity and "truthfulness" of the mathematics that theorycrafters use. However, when tested in raids and against target dummies, while the math is not exact, our findings often still hold true. If the math indicates that a set is stronger than another, oftentimes that finding holds true in trials, though the exact difference may vary from the mathematical results.
+
+Hopefully with this lecture series, I can show everyone how the math works in a simple and straightforward manner. If you have any questions throughout the series, you can contact me on Discord through @t3hasiangod#2864.
+
+# The Ability Metric
+
+The first mathematical formula every theorycrafter should learn is known as the ability metric formula. First explained by Asayre in the Homestead patch in 2017, this formula is the basis behind comparing various sets and creating new builds. The full post can be found on the official forums [here](https://forums.elderscrollsonline.com/en/discussion/318595/introduction-to-pve-damage-calculation-homestead/p1). 
+
+Note that while I will be using Magicka, Spell Damage, and Spell Critical for consistency, you can substitute Stamina, Weapon Damage, and Weapon Critical for these values, respectively.
+
+The full formula is as follows:
+
+$Ability\;Metric = (Magicka + 10.5 * Spell\;Damage) * Attacker\;Bonus * (1 - Mitigation) * (1 + Spell\;Crit * Crit\;Damage)$
+
+Let's break down what each term means.
+
+## Effective Max Magicka or Effective Spell Damage
+
+The first term in the ability metric formula is $(Magicka + 10.5 * Spell\;Damage)$. We can also use the term $(Magicka/10.5 + Spell\;Damage)$, for reasons we will explain in a moment.
+
+This entire term is sometimes called our "Effective Max Magicka" or "Effective Spell Damage", depending on which permutation of the term we use. Why? Because the term in its entirety converts our Magicka or Spell Damage into Spell Damage or Magicka, respectively.
+
+How does this happen? Well first, we need to talk about **skill coefficients**. 
+
+### Skill Coefficients
+
+Every skill in ESO has a formula to calculate out its tooltips. Most, if not all, skills in the game have this formula determined. You can find these formula at [this link](https://esoitem.uesp.net/viewSkillCoef.php). Let's examine the formula for Unstable Wall of Elements.
+
+If we pull out the formulas for Unstable Wall of Elements, we find we have two equations. Below you'll find the description of Unstable Wall of Fire IV and the formulas for the tooltip values.
+
+> Slam your staff down to create an unstable flaming barrier in front of you, dealing *a* Flame Damage to enemies in the target area every 1 second. Burning enemies take 20% more damage from this ability. When the effect ends, the barrier explodes, dealing *b* Flame Damage.
+
+$a = 0.0139743 * Magicka + 0.14746 * SD + 0.569696$
+
+$b = 0.0798816 * Magicka + 0.840011 * SD + 0.470027$
+
+So you can see that we are able to predict the tooltip values of Unstable Wall of Fire by plugging into these equations. If we have our Max Magicka and our Spell Damage, we are able to plug these values into the two equations and come up with our tooltip values. 
+
+You may also notice if you follow the link above that there are a few values in brackets after these equations. The first value, R2, is the correlation of this equation with the true tooltip value. These skill coefficient formulas are highly accurate, but most of them are not going to be perfectly aligned with true in-game values. The closer R2 is to 1, the more accurate the skill coefficient formula is. 
+
+The second value is called ratio, and it'll usually be something around 10.5. This is the radio between the coefficients of Spell Damage and Magicka. If we take a look at the values from above for tooltip value *a*, we have a coefficient of 0.14746 for Spell Damage and 0.0139743 for Magicka. If we take the ratio of these two values, we get a value of 10.55223. In other words, for every 10.55223 Max Magicka we have, this is the equivalent of having 1 additional Spell Damage.
+
+```{r cars}
+0.14746/0.0139743
+```
+
+You can test this out using fake values as well! Let's say we have 20000 Max Magicka and 2000 Spell Damage. If we add in 1055 Max Magicka, this should be the equivalent of adding in 100 Spell Damage to the formula for *a*.
+
+```{r}
+0.0139743 * 21055 + 0.14746 * 2000 + 0.569696
+0.0139743 * 20000 + 0.14746 * 2100 + 0.569696
+```
+
+As we can see, the values are pretty close together, so we can pretty much say they are equal to each other.
+
+This is where the common phrase "10.5 Max Magicka is equal to 1 Spell Damage" comes from. 
+
+### Back to Effective Max Magicka or Effective Spell Damage
+
+Now that we know how Magicka and Spell Damage are related, we can see how we got to the first term of our ability metric equation.
+
+$(Magicka/10.5 + Spell\;Damage)$ gives us our Effective Spell Damage by converting our Max Magicka into Spell Damage.
+
+$(Magicka + 10.5 * Spell\;Damage)$ gives us our Effective Max Magicka by converting our Spell Damage into Max Magicka.
+
+## Attacker Bonus
+
+Asayre breaks down this term into three components: CP Bonus, Damage Done, and Damage Taken. The full term is as follows:
+
+$Attacker\;Bonus = CP\;Bonus * Damage\;Done * Damage\;Taken$
+
+Your CP bonus includes your CP modifiers, such as Elemental Expert, Thaumaturge, and Master-at-Arms. Your Damage Done includes anything that has the phrase "increases damage dealt" or "increases your damage done" in its description. A classic example of this would be Minor Berserk, which boosts your damage done to enemies by 8 percent. Your Damage Taken includes anything that has the phrase "increases damage taken" in its description. A classic example of this would be Minor Vulnerability, which boosts the damage enemies take from your attacks by 8 percent.
+
+A simple way to think of this is that Damage Done modifiers are buffs to you, while Damage Taken modifiers are debuffs to the enemy.
+
+You'll also notice that these terms are not additive with each other. Rather, they are multiplicative. This means that the more terms you add on, the less effective these terms will be. The math behind this will be covered in a later lecture series.
+
+Now, it's important to note how we are including these percentage modifiers in our metric calculations. These are added to the value of 1, after dividing them by 100. So adding an 8 percent bonus would be equal to $1 + 0.08$. 
+
+So if we had, for example, 13 percent from Elemental Expert, 20 percent from Master-at-Arms, and 16 percent from Thaumaturge, our CP Bonus would be equal to the following:
+
+$(1 + 0.13 + 0.2 * Direct\;Damage\;proportion + 0.16 * Damage\;over\;Time\;proportion)$
+
+Since Thaumaturge and Master-at-Arms impact Damage over Time and Direct Damage abilities, respectively, we also have to take the proportion of our damage into consideration. If 40 percent of our total damage is from direct damage, then we would need to multiply our value of 0.2 by 0.4 to get our "true" CP modifier. 
+
+From here, figuring out your damage done modifier and damage taken modifiers are fairly straightforward. The  most common Damage Done modifiers are the Berserk bonuses, and the most common Damage Taken modifiers are the Vulnerability bonuses. Just remember: if it's a buff to you, then it most likely falls under Damage Done. If it's a debuff on the enemy, then it most likely falls under Damage Taken.
+
+## Mitigation
+
+Mitigation also has its own subformula. Asayre describes mitigation as follows:
+
+$Mitigation = ((Resistance - Armour\;Debuff) * (1 - Percent\;Penetration) - Flat\;Penetration)/(Level * 1000)$
+
+Let's break down each of the terms.
+
+Resistance is pretty straightforward: it's just the resistances of whatever it is you're hitting. For most dungeon and trial bosses and mobs, this value is 18200 for both Spell and Physical Resistance. For most overland mobs, including world bosses, this value is 9100 for both Spell and Physical Resistance. For players, this value is dependent on that player's resistances. This is where the 18200 value comes from for PvE content.
+
+Armour Debuff refers to flat decreases to an enemy's resistances that are debuffs. This includes effects like Alkosh, Fracture, and Breach. Anything that provides just a flat numerical decrease falls under this category.
+
+Percentage Penetration refers to the unique skill passive from both the Dual Wield and Two Handed line for maces and mauls, respectively. Maces provide an additional 10 percent penetration each, while mauls provide an additional 20 percent penetration. As we described above, these would be entered in as 0.1 and 0.2, respectively. Since these values are calculated after the debuffs are taken into consideration, this is one of the primary reasons why maces and mauls are not very powerful compared to other weapon options.
+
+Flat Penetration includes any flat bonuses that are not tied to debuffs. Classic examples of this would be the penetration you get from the CP passives Piercing and Spell Erosion. Armor bonuses also contribute to this stat.
+
+As for Level, for PvE enemies, they are all scaled to be level 50. Players are scaled to level 66, 50 total levels and 16 "extra" levels for every 10 CP you have until you reach CP 160. 
+
+So as an example, let's say we're fighting a trials boss with Major Breach, Alkosh, infused non-Torug's Crusher, with an additional 1000 flat penetration from Spell Erosion. 
+
+```{r}
+((18200 - 5280 - 3010 - 2108) - 4884 - 1000)/(50 * 1000)
+```
+
+We would have a total mitigation of 3.8 percent (just move the decimal point two places to the right).
+
+## Crit Modifier
+
+We come to the final term, which is actually pretty straightforward. This term, sometimes called the "crit modifier", is just multiplying your critical chance and critical damage modifier together and adding 1. 
+
+$Crit\;Modifier = (1 + Crit\;Chance * Crit\;Damage)$
+
+Critical chance is pretty straightforward, since you can get this value straight from your character sheet. Every 219 Crit Rating you get in-game is equal to approximately 1 percent crit chance. So Major Prophecy, which provides 2190 Spell Critical Rating, is equivalent to providing an additional 10 percent Spell Critical. 
+
+Critical damage is a bit harder to find, as it is not available in the base game character sheet. This value is how much extra damage your critical hits deal compared to non-critical hits. The base modifier is 50 percent additional damage. The Force buffs improve this by 10 percent for Minor Force and 15 percent for Major Force. Other ways to improve critical damage include using the Shadow Mundus and through CP passives. 
+
+Note that it is possible to get over 100 percent critical damage, but you are capped at 100 percent critical hit chance (you can't get more than 1 crit per hit!). 
+
+For example, let's say we have Minor Force, are using the Shadow Mundus with all Divines pieces for a total of 19 percent additional critical damage, and we're a Khajiit for another 10 percent more critical damage. With a 60 percent crit chance, our crit modifier would be 1.534.
+
+```{r}
+1 + 0.6 * (0.5 + 0.1 + 0.19 + 0.1)
+```
+
+# How do we actually USE the Ability Metric?
+
+Now that we know what the ability metric is, let's talk about how theorycrafters use it. 
+
+First, it's important to note that the ability metric calculation is only an approximation, and while it has an association with DPS, it is not a direct representation of DPS. However, because of the strong association with DPS, the ability metric is commonly used to assess and compare different builds against each other. This also include comparing how one set performs relative to another, or how adding in a buff or debuff will impact your total damage output.
+
+## Calculating Percentage Differences
+
+To first understand how we use the ability metric, we should cover how to calculate percentage differences. The formula for determining percentage difference is as follows:
+
+$Percent\;Change = (Final - Initial)/Initial * 100$
+
+You can simplify this by splitting the division term into Final/Initial and Initial/Initial to get the following:
+
+$Percent\;Change= (Final/Initial - 1) * 100$
+
+This will give us a percentage change. Anything less than 100 would be a decrease compared to your initial value and anything over 100 would be an increase compared to your initial value. So you can surmise that we take two ability metrics and compare them to each other using this formula to figure out what the expected result will be.
+
+## Keeping it Simple
+
+We can simplify this further by only including terms that change between the two different builds we want to compare. 
+
+For example, let's say that all we're interested in is whether changing our Mundus from the Shadow to the Thief results in a DPS increase. Since we're only changing our Mundus, and we aren't changing to the Mage or Apprentice, the only term we would care about is the Crit Modifier. This is because we are only changing our Crit Chance and Crit Damage. Then we would use the following equation (assuming 60 percent crit chance and 99 percent crit damage using the Shadow with 7 Divines):
+
+```{r}
+((1 + 0.706 * 0.8)/(1 + 0.6 * 0.99) - 1) * 100
+```
+
+So we would see an approximate 1.8 percent loss in our ability metric from running the Thief instead of the Shadow. Again, as mentioned above, this does not translate directly into a 1.8 percent DPS loss, but due to the high correlation between ability metric and DPS, we often say that this is a 1.8 percent loss in damage.
+
+# Conclusion
+
+Here, we have broken down and explained the various components of the ability metric. Despite how complex the equation may look, it is actually fairly simply once you break it down its various terms. The ability metric is a measurement that can help compare different builds and inform players whether it is worth changing certain sets around.
+
+However, it's important to keep in mind the various limitations of the ability metric. It cannot (directly) take into consideration flat damage bonuses, such as proc damage. Sets that have proc damage need to be compared separately to other sets (more on that in a future lecture). In addition, the ability metric is not analogous to DPS. While both are highly correlated, it would be inaccurate to state that you can use the ability metric and damage output interchangeably. It would be more accurate to state that the ability metric is a proxy for damage output, and changes to ability metric would be highly correlated with your damage output.
+
+We will be using this measurement in our future lectures, as the ability metric measurement is the basis behind all theorycrafting. 
