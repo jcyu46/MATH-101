@@ -1,0 +1,62 @@
+---
+title: "Normalizing Parses"
+author: "T3hasiangod"
+date: "12/5/2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this lecture, we'll be discussing how we can normalize our parses to account for things like debuff/buff uptimes and lucky (or unlucky!) crit chances.
+
+# The Ability Metric: How does it play into this?
+
+As to be expected, the ability metric plays a large role in how we can standardize our parses. Here is the full formula for the ability metric:
+
+$Ability\;Metric = (Magicka + 10.5 * Spell\;Damage) * Attacker\;Bonus * (1 - Mitigation) * (1 + Spell\;Crit * Crit\;Damage)$
+
+We will be using this to adjust our parses for buff uptimes, debuff uptimes, and crit chance.
+
+# Standardizing on Buffs
+
+Let's say you had a fill-in healer for a raid and their Combat Prayer (and thus Minor Berserk) uptime was higher or lower than your normal healer. You're interested in how much higher or lower your DPS could have been if the other healer was there.
+
+What we want to do is take a look at the percentage difference between our "baseline" uptime and our "standard" uptime. Recall our percentage difference calculations:
+
+$Percent\;Change= (Final/Initial - 1) * 100$
+
+What we want to do is use the uptime we want to standardize up (or down) to as our Final value, and then use our current parse (i.e. the parse we want to standardize) as our Initial value. This is probably best seen via an example.
+
+For this example, we'll be using a Minor Berserk uptime of 50 percent as our "baseline" and normalize it to our "standard" of 85 percent uptime. If everything else remains the same, then we can just look at the Damage Done modifiers. As usual, we'll be including Minor Slayer to our modifier.
+
+```{r}
+((1 + 0.05 + 0.08 * 0.85)/(1 + 0.05 + 0.08 * 0.5) - 1) * 100
+```
+
+Based on this, we can determine that our parse should be adjusted upwards by 2.57 percent. So if our "baseline" parse was 70,000, our new standardized parse would be 71,799. 
+
+# Standardizing on Crit Chance
+
+Something that some players are accused of is something known as "crit farming". Basically, on a trial dummy parse, some players parse until they get lucky with the number of crits they have until they get a high parse. Parse variation is normal; due to the RNG factor of critical hits, we can reasonable expect some variation. However, there is a way to help standardize our parses to account for crits. 
+
+It's done in a similar fashion as above, but this time, we're going to be looking at a Combat Metrics report; sorry console users, but this method will be a lot harder (probably impossible) for you. We'll be using [this parse](https://imgur.com/qnvekoN) for our example (note that this is going to be a fairly bad example, as we'll see in a second).
+
+The first thing we need to do is subtract out all hits that can't be crits. This mostly includes just proc sets. So in the parse, we would need to subtract out the 327 hits from Relequen and the 27 hits from Velidreth from both our "normal" hit count and our "total" hit count. This brings us to 560 normal hits, 926 critical hits, and 1486 total hits. This gives us an overall crit rate of about 62.3 percent. Now this is actually exactly what our mean crit chance is, so standardizing this parse would actually not accomplish much, if at all. What this means is that this parse is pretty close to standardized already.
+
+But let's say we wanted to know how much our DPS would improve if we have our max crit chance of 62.9. Well, we'd just calculate out the percentage difference, this time using our crit modifier.
+
+```{r}
+((1 + 0.629 * 1.085)/(1 + 0.623 * 1.085) - 1) * 100
+```
+
+So if we had our max crit chance throughout the whole parse, we would have seen about a 0.4 percent increase in our DPS. Since we pulled 81,019 DPS on that parse, we would get 81,343 as our standardized parse.
+
+# Conclusion
+
+While standardizing parses is not a common practice, it can help you figure out whether someone was lucky or unlucky with their crit chance. It also serves as an invaluable tool if you wanted to get a sense of how one build compares to another, as you'll be able to better control for the crit RNG using this method. 
