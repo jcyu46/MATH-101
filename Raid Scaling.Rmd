@@ -1,6 +1,6 @@
 ---
 title: "Raid Scaling"
-author: "Justin Yu"
+author: "T3hasiangod"
 date: "11/17/2019"
 output: 
   html_document:
