@@ -10,7 +10,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Justin Yu" />
+<meta name="author" content="T3hasiangod" />
 
 <meta name="date" content="2019-11-17" />
 
@@ -364,29 +364,61 @@ summary {
 
 
 <h1 class="title toc-ignore">Raid Scaling</h1>
-<h4 class="author">Justin Yu</h4>
+<h4 class="author">T3hasiangod</h4>
 <h4 class="date">11/17/2019</h4>
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#percentage-change">Percentage change</a></li>
+<li><a href="#courage">Courage</a></li>
+<li><a href="#berserk-and-vulnerability">Berserk and Vulnerability</a></li>
+<li><a href="#major-force-why-warhorn-is-so-damn-strong">Major Force: Why Warhorn is so damn strong</a></li>
+<li><a href="#putting-it-all-together">Putting it all together</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
 
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
 <p>In this short lecture, we’re going to talk about raid scaling. In other words, we’re going to discuss the various buffs you would get from playing in an organized raid groups and how much of a damage increase you’d be getting from these various buffs.</p>
 <p>Many people (correctly) assume that playing in an organized raid group provides a much larger bonus to damage than playing in a disorganized or PUG group. While these assumptions are true, many players overstate how much of a difference this makes. This lecture will clear up some of the misconceptions and explain how much damage you can expect to gain by each specific buff.</p>
 </div>
-<div id="buffs" class="section level1">
-<h1>Buffs</h1>
-<p>We’ll first go over each buff. Remember that buffs affect you, rather than the enemy. So bonuses like Minor Berserk or Major Courage call under buffs, but not Minor Vulnerability or Engulfing Flames.</p>
-<div id="major-and-minor-courage" class="section level2">
-<h2>Major and Minor Courage</h2>
+<div id="percentage-change" class="section level1">
+<h1>Percentage change</h1>
+<p>Before we go over each buff and debuff individually, let’s talk about percentage change first.</p>
+<p>The formula for determining percentage difference is as follows:</p>
+<p><span class="math inline">\(Percent\;Change = (Final - Initial)/Initial * 100\)</span></p>
+<p>You can simplify this by splitting the division term into Final/Initial and Initial/Initial to get the following:</p>
+<p><span class="math inline">\(Percent\;Change= (Final/Initial - 1) * 100\)</span></p>
+<p>This will give us a percentage change. Anything less than 100 would be a decrease compared to your initial value and anything over 100 would be an increase compared to your initial value.</p>
+<p>Recall from our previous lecture that we use this formula with ability metric scores to determine the total damage change we can expect from one build to the next. We will continue to use this formula to help us determine the percentage damage bonus we can expect from our buffs and debuffs.</p>
+</div>
+<div id="courage" class="section level1">
+<h1>Courage</h1>
 <p>The first family of buffs is Major and Minor Courage. Major Courage boosts your Weapon and Spell Damage by 258, while Minor Courage boosts your Weapon and Spell Damage by 129. This bonus is affected by percent modifiers, such as Major Brutality and Sorcery. Now the exact bonus to your damage that you’ll gain from the Courage buffs will depend on your Spell or Weapon Damage before the buff is applied. Simply put, the higher your base Damage is before the buff, the less of a bonus you’ll get.</p>
 <p>Take, for example, two different players. One player has a base Damage of 3000, while the second player has a base damage of 4000. All other attributes are otherwise identical. The Major Courage bonus of 258 is a <em>smaller percentage</em> of 4000 than it is of 3000.</p>
 <pre class="r"><code>258/4000</code></pre>
 <pre><code>## [1] 0.0645</code></pre>
 <pre class="r"><code>258/3000</code></pre>
 <pre><code>## [1] 0.086</code></pre>
-<p>For example, let’s take a look at the Damage Taken modifier. There are a few debuffs that count as Damage Taken. Let’s use Minor Vulnerability and Martial Knowledge as our base. Minor Vulnerability is an 8 percent debuff, while Martial Knowledge is also an 8 percent debuff while it is active. Let’s say we wanted to add in Major Vulnerability from a Necromancer’s Frozen Colossus move. Major Vulnerablity increases damage taken by 25 percent. But is that the true value that we get?</p>
+<p>Based on this, we can expect that the damage that the first player gets from Major Courage would be greater than the damage bonus the second player would get.</p>
+<p>However, it is not as simple as taking the bonuses, multiplying them by our modifiers, and then dividing by our base damage as you see above. This is because we also need to consider the impact of our Resource pools. Recall that Damage and Resources both play into the same term in our ability metric <span class="math inline">\((Resources/10.5 + Damage)\)</span>. So we also need to examine our Resource pool.</p>
+<p>Using the example from above, let us also assume our two players have a resource pool of 35000. Let us also assume that they both have a modifier of 30 percent to their Damage. Then our percentage increase in damage would be 5.3 percent for our first player and 4.6 percent for our second player. As we can see, the percentage change for our second player is smaller than our first player because our starting Damage is lower. This doesn’t make it any less important for our second player, but is a demonstration to how our base Damage plays a role in the total extra damage we get from Courage buffs.</p>
+<pre class="r"><code>(35000/10.5 + (3000 + 258*1.3))/(35000/10.5 + 3000)</code></pre>
+<pre><code>## [1] 1.052958</code></pre>
+<pre class="r"><code>(35000/10.5 + (4000 + 258*1.3))/(35000/10.5 + 4000)</code></pre>
+<pre><code>## [1] 1.045736</code></pre>
+</div>
+<div id="berserk-and-vulnerability" class="section level1">
+<h1>Berserk and Vulnerability</h1>
+<p>Now let’s take a look at the buff Berserk and its companion debuff Vulnerability. Berserk increases damage done, while Maim decreases damage done. Minor Berserk provides an 8 percent bonus, with Major Berserk providing a 15 percent boost.</p>
+<p>We’ll also talk about Vulnerability as well, as these buffs interact with each other in the ability metric formula. Minor Vulnerability is a debuff that increases damage taken by 8 percent, while Major Vulnerability increases damage taken by 25 percent.</p>
+<p>Recall that Damage Done and Damage Taken modifiers fall under the umbrella term Attacker Bonus in the ability metric formula <span class="math inline">\((CP\;Bonus * Damage\;Done * Damage\;Taken)\)</span>.</p>
+<p>Notice that the Damage Done and Damage Taken are separate from each other. They act multiplicatively with each other, rather than additively. This makes a difference in the actual effective bonus that you get from these buffs; this is what people sometimes refer to as “raid scaling”, since these buffs are commonly obtained only in raids.</p>
+<p>Here’s an example of how raid scaling with these two buffs work. Let’s use Minor Vulnerability and Martial Knowledge as our base. Minor Vulnerability is an 8 percent debuff, while Martial Knowledge is also an 8 percent debuff while it is active. Let’s say we wanted to add in Major Vulnerability from a Necromancer’s Frozen Colossus move. Major Vulnerablity increases damage taken by 25 percent. But is that the true value that we get?</p>
 <p>Let’s say we have Minor Berserk as our only Damage Done modifier, and we have 13 percent from Elemental Expert and 20 percent from both Thaumaturge and Master-at-Arms.</p>
 <pre class="r"><code>(1 + 0.13 + 0.20) * (1 + 0.08) * (1 + 0.08 + 0.08)</code></pre>
 <pre><code>## [1] 1.666224</code></pre>
@@ -395,7 +427,107 @@ summary {
 <p>If we take the ratio of our two values, we get a value of 1.215, which is lower than our expected 1.25 if we were getting the full value of Major Vulnerability.</p>
 <pre class="r"><code>2.025/1.666</code></pre>
 <pre><code>## [1] 1.215486</code></pre>
+<p>What happens if we also add on Minor Slayer?</p>
+<pre class="r"><code>(1 + 0.13 + 0.20) * (1 + 0.08 + 0.05) * (1 + 0.08 + 0.08)</code></pre>
+<pre><code>## [1] 1.743364</code></pre>
+<pre class="r"><code>(1 + 0.13 + 0.20) * (1 + 0.08 + 0.05) * (1 + 0.08 + 0.08 + 0.25)</code></pre>
+<pre><code>## [1] 2.119089</code></pre>
+<pre class="r"><code>2.119/1.743</code></pre>
+<pre><code>## [1] 1.21572</code></pre>
+<p>We get a slightly different answer, but when rounded, the result is pretty much identical. So buffs that add to the same stat end up being (relatively) weaker as you add more of them.</p>
+<p>And of course, what about the title of the video? Is Minor Berserk 8 percent damage done? Let’s add on Major Slayer, since that’s relatively easy to obtain on a stamina DPS.</p>
+<pre class="r"><code>(1 + 0.13 + 0.20)  * (1 + 0.05 + 0.15) * (1 + 0.08 + 0.08 + 0.25)</code></pre>
+<pre><code>## [1] 2.25036</code></pre>
+<pre class="r"><code>(1 + 0.13 + 0.20) * (1 + 0.05 + 0.15 + 0.08) * (1 + 0.08 + 0.08 + 0.25)</code></pre>
+<pre><code>## [1] 2.400384</code></pre>
+<pre class="r"><code>2.4/2.25</code></pre>
+<pre><code>## [1] 1.066667</code></pre>
 </div>
+<div id="major-force-why-warhorn-is-so-damn-strong" class="section level1">
+<h1>Major Force: Why Warhorn is so damn strong</h1>
+<p>For our last topic, we’ll look at Major Force. Major Force boosts Critical Damage by 15 percent while it is active. This is a pretty hefty buff, and many groups aim to maximize Major Force uptime by rotating their Warhorns; your standard group, if they use Warhorn to maximize Major Force uptime, can get upwards of 75 to 80 percent Major Force uptime. However, more commonly, Warhorns are used in conjunction with Major Vulnerability from a Necromancer to maximize the burst damage dealt.</p>
+<p>Recall the crit modifier term from our ability metric: <span class="math inline">\((1 + Critical\ Chance * Critical\ Damage)\)</span>. As we can see, as Critical Damage increases, our overall crit modifier also increases. Increasing our crit modifier is one of the more straightforward methods of improving DPS, as it only has two terms, both of which are relatively easy to understand. How does Major Force impact our crit modifier?</p>
+<p>Let’s assume that we’re running Mother’s Sorrow as a magicka DPS, so we’re averaging roughly 66 percent crit chance. Your standard magicka DPS build will be running between 0.8 and 0.9 as our critical damage modifier, depending on our class. Let’s add in Major Force to this build.</p>
+<pre class="r"><code>1 + 0.66 * 0.8</code></pre>
+<pre><code>## [1] 1.528</code></pre>
+<pre class="r"><code>1 + 0.66 * 0.95</code></pre>
+<pre><code>## [1] 1.627</code></pre>
+<pre class="r"><code>1.627/1.528</code></pre>
+<pre><code>## [1] 1.064791</code></pre>
+<pre class="r"><code>1 + 0.66 * 0.9</code></pre>
+<pre><code>## [1] 1.594</code></pre>
+<pre class="r"><code>1 + 0.66 * 1.05</code></pre>
+<pre><code>## [1] 1.693</code></pre>
+<pre class="r"><code>1.693/1.594</code></pre>
+<pre><code>## [1] 1.062108</code></pre>
+<p>We see that Warhorn will boost our DPS by about 6.5 percent or so while it is active. If we assume we’re running a higher crit damage modifier (perhaps we’re on a Nightblade), then we’ll boost our DPS by about 6.2 percent instead.</p>
+<p>Stamina DPS will sometimes run lower crit; a 2-Handed build will often be sitting between 53 and 60 crit chance, and even a Dual Wield build can run as low as 62 percent crit chance.</p>
+<pre class="r"><code>1 + 0.53 * 0.8</code></pre>
+<pre><code>## [1] 1.424</code></pre>
+<pre class="r"><code>1 + 0.53 * 0.95</code></pre>
+<pre><code>## [1] 1.5035</code></pre>
+<pre class="r"><code>1.5035/1.424</code></pre>
+<pre><code>## [1] 1.055829</code></pre>
+<pre class="r"><code>1 + 0.53 * 0.9</code></pre>
+<pre><code>## [1] 1.477</code></pre>
+<pre class="r"><code>1 + 0.53 * 1.05</code></pre>
+<pre><code>## [1] 1.5565</code></pre>
+<pre class="r"><code>1.5565/1.477</code></pre>
+<pre><code>## [1] 1.053825</code></pre>
+<p>Here we see more modest gains of 5.6 and 5.4 percent additional damage with our 2-Handed build (our Dual Wield build will see similar gains as our Magicka comparison above).</p>
+<p>However, keep in mind that this is about equal to adding in Minor Berserk for Magicka. This bonus stacks on top of Minor Berserk as well, making it particularly powerful.</p>
+</div>
+<div id="putting-it-all-together" class="section level1">
+<h1>Putting it all together</h1>
+<p>So now let’s see how much damage we can add in a raid environment once our buffs are active. Let’s use the values assigned above for Magicka DPS.</p>
+<p>Our pre-raid buff values include: 13 percent from Elemental Expert, 20 percent from both Thaumaturge and Master-At-Arms, 66 percent average crit chance, 90 percent average crit damage, 35000 Max Magicka, 3000 Spell Damage, and Minor Slayer.</p>
+<p>The buffs we’re adding include: Major Courage, Minor Courage, Major Slayer, Minor Vulnerability, Major Vulnerability, Minor Berserk, Major Force, and Martial Knowledge. We’ll take a look at each bonus individually, and then look at the sum total.</p>
+<pre class="r"><code>#Establish our baseline metric
+base &lt;- (35000/10.5 + 3000) * (1 + 0.13 + 0.20) * (1 + 0.66 * 0.9) * (1 + 0.05)
+
+#Major + Minor Courage
+courage &lt;- (35000/10.5 + (3000 + (258 + 129) * 1.3)) * (1 + 0.13 + 0.20) * (1 + 0.66 * 0.9) * (1 + 0.05)
+courage/base</code></pre>
+<pre><code>## [1] 1.079437</code></pre>
+<pre class="r"><code>#Major Slayer
+slayer &lt;- (35000/10.5 + 3000) * (1 + 0.13 + 0.20) * (1 + 0.66 * 0.9) * (1 + 0.05 + 0.15)
+slayer/base</code></pre>
+<pre><code>## [1] 1.142857</code></pre>
+<pre class="r"><code>#Minor Vulnerability
+m.vuln &lt;- (35000/10.5 + 3000) * (1 + 0.13 + 0.20) * (1 + 0.66 * 0.9) * (1 + 0.05) * (1 + 0.08)
+m.vuln/base</code></pre>
+<pre><code>## [1] 1.08</code></pre>
+<pre class="r"><code>#Major Vulnerability
+M.vuln &lt;- (35000/10.5 + 3000) * (1 + 0.13 + 0.20) * (1 + 0.66 * 0.9) * (1 + 0.05) * (1 + 0.25)
+M.vuln/base</code></pre>
+<pre><code>## [1] 1.25</code></pre>
+<pre class="r"><code>#Minor Berserk
+berserk &lt;- (35000/10.5 + 3000) * (1 + 0.13 + 0.20) * (1 + 0.66 * 0.9) * (1 + 0.05 + 0.08)
+berserk/base</code></pre>
+<pre><code>## [1] 1.07619</code></pre>
+<pre class="r"><code>#Major Force
+force &lt;- (35000/10.5 + 3000) * (1 + 0.13 + 0.20) * (1 + 0.66 * 1.05) * (1 + 0.05)
+force/base</code></pre>
+<pre><code>## [1] 1.062108</code></pre>
+<pre class="r"><code>#Martial Knowledge
+mk &lt;- (35000/10.5 + 3000) * (1 + 0.13 + 0.20) * (1 + 0.66 * 0.9) * (1 + 0.05) * (1 + 0.08)
+mk/base</code></pre>
+<pre><code>## [1] 1.08</code></pre>
+<pre class="r"><code>#Additive scale
+(courage/base - 1) + (slayer/base - 1) + (m.vuln/base - 1) + (M.vuln/base - 1) + (berserk/base - 1) + (force/base - 1) + (mk/base - 1)</code></pre>
+<pre><code>## [1] 0.7705924</code></pre>
+<pre class="r"><code>#Multipliative scale
+(courage/base) * (slayer/base) * (m.vuln/base) * (M.vuln/base) * (berserk/base) * (force/base) * (mk/base)</code></pre>
+<pre><code>## [1] 2.055912</code></pre>
+<pre class="r"><code>#Total
+total &lt;- (35000/10.5 + (3000 + (258 + 129) * 1.3)) * (1 + 0.13 + 0.20) * (1 + 0.66 * 1.05) * (1 + 0.05 + 0.15 + 0.08) * (1 + 0.08 + 0.08 + 0.25)
+total/base</code></pre>
+<pre><code>## [1] 1.970633</code></pre>
+<p>As we can see, when we take a look at all our buffs combined, we get more out of our buffs compared to a purely additive scale, but not quite as much as on a purely multiplicative scale. We’re getting almost double our damage output from having a ton of raid buffs active. Since each of our terms are interacting multiplicatively with each other, we’re getting a lot more out of our buffs compared to simply adding them together.</p>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>In summary, we’ve shown how raid buffs interact with each other and how important they are to improving overall group damage. We’ve shown that raid buffs of the same type interact additively with each other, but multiplicatively with other raid buffs, resulting in a total increase that is greater than the sum of our parts.</p>
 </div>
 
 
