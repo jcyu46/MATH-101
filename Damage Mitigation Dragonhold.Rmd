@@ -1,0 +1,294 @@
+---
+title: "Damage Mitigation - Dragonhold"
+author: "T3hasiangod"
+date: "December 9th, 2019"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    number_section: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+This page explains the damage calculations as of Dragonhold. Prior to Murkmire, damage shields did not inherit your resistances, meaning that resistances were applied later in the equation. In Murkmire, the damage calculation was changed for damage shields. They now inherit your resistances, which moves the resistance modifier further up in the damage equation. This ultimately changed the damage calculation, as resistances were shifted. 
+
+In addition, in Scalebreaker, it was suspected that ZOS changed the damage mitigation formula again. It was later confirmed by forum user paulsimonps [here](https://forums.elderscrollsonline.com/en/discussion/279426/damage-mitigation-explanation-updated-15-07-2019). The big change was that mitigation is now additive, with the exception of the Maim debuffs. 
+
+# General Formulation
+
+## Prior to Murkmire
+
+Prior to Murkmire, the damage formulation was determined as followed.
+
+```
+Mitigation = (Mitigation.1 * Mitigation.2 * ... * Mitigation.N
+
+Damage taken = ((Base Damage * Mitigation) - Shields) * (((100 - Resistances/660) * 0.01) * Block * Block.Mitigation.1 * ... * Block.Mitigation.N)
+```
+
+In this scenario, your resistances were taken into consideration **after** your shield was depleted. 
+
+## Post-Murkmire
+
+The formula from Murkmire for determining incoming damage is summarized below. The biggest change here is that your resistances are placed before the block mitigation is taken into consideration. In other words, your resistances are now taken into consideration **before** your shield is depleted.
+
+```
+Mitigation = ((100 - (Resistances/660)) * 0.01) * Mitigation.1 * Mitigation.2 * ... * Mitigation.N
+
+Damage taken = ((Base Damage * Mitigation) - Shields) * (Block * Block.Mitigation.1 * Block.Mitigation.2 * ... * Block.Mitigation.N)
+```
+
+## Post-Scalebreaker
+
+As of Scalebreaker, we have a new mitigation formula, given below. Now, vulnerability sources are now additive with mitigation factors until all vulnerability has been reduced. At that point, any remaining mitigation is then tacked on multiplicatively. The exception is Maim. It remains multiplicative with other mitigation sources, regardless of whether there are vulnerabilities present. In addition, block mitigation has been capped at 90 percent mitigation.
+
+```
+Mitigation = ((100 - (Resistance/660)) * 0.01) * Minor Maim * Major Maim * (1 - (Mitigation.1 + Mitigation.2 + ... + Mitigation.N - Vulnerability.1 - Vulnerability.2 - ... - Vulnerability.N)) * Mitigation.Extra.1 * Mitigation.Extra.2 * ... * Mitigation.Extra.N
+
+Damage taken = ((Base Damage * Mitigation) - Shields) * Block * (1 - (Block.Mitigation.1 + Block.Mitigation.2 + ... + Block.Mitigation.N))
+```
+
+## Multiplicativity and its Implications
+
+Why does the placement of resistances matter? It matters due to the multiplicativity of the damage calculations in combination with the placement of the shields. Here's a simple example of what this means. 
+
+You may remember from grade school math the commutative and associative properties of multiplication and addition. The commutative property states that a + b and a \* b are equal to b + a and b *\ a, respectively. The associative property states that a + (b + c) and a \* (b \* c) are equal to (a + b) + c and (a \* b) \* c, respectively. However, subtraction and division are not commutative or associative properties; a - b is not equal to b - a.
+
+Because our shields enter the equation as a subtractive factor, we can simplify the damage taken equation like so:
+
+```
+Prior to Murkmire: Damage taken = (a - b) * c * resistances
+
+After Murkmire: Damage taken = ((resistances * a) - b) * c
+```
+
+Because resistances is now attached to our term a, rather than our term c, this changes the overall result; we do not get equal results. If we try to solve for damage taken, then we get the following.
+
+```
+(a - b) * c * resistances = ((resistances * a) - b) * c
+
+**Divide by c**
+
+(a - b) * resistances = (resistances * a) - b
+
+**Multiply out the left hand side**
+
+resistances * a - resistances * b = resistances * a - b
+
+**Divide by resistances * a**
+
+resistances * b = b
+```
+
+What does this mean? Well, from the algebra above, we come to the simple conclusion that resistances now count towards our shields, but that's about it. And we know that already from the patch notes. We'll need to put some numbers to this to get a sense of what these changes actually mean.
+
+# Sources of Mitigation
+
+## Shields
+
+The major source of mitigation for magicka DPS. There are many abilities that provide what's called a damage shield, which will show up as a different colored bar over your health bar; if this bar doesn't appear, then it is not a damage shield ability. Damage shields effectively provide additional health when used. Below you will find a list of common sources of damage shields, along with any hard caps they may have. Any ability that does not have a hard cap can have their shield amount increased by investing points into the Bastion CP under the Lord.
+
+```
+Light Armor ability: Annulment + Harness Magicka - 50% of max health (hard)
+Light Armor ability: Dampen Magic - 60% of max health (hard)
+Sorcerer ability: Conjured Ward + Empowered Ward - 50% of max health (hard)
+Sorcerer ability: Hardened Ward - 60% of max health (hard)
+Dragonknight ability: Obsidian Shield + Fragmented Shield - Up to 8% of max health (also applies to 5 nearby allies)
+Dragonknight ability: Igneous Shield - Up to 24% of max health (also applies 8% of max health to 5 nearby allies)
+Templar ability: Sun Shield + Blazing Shield - 24% of max health + 4% for every nearby enemy
+Templar ability: Radiant Ward - 24% of max health + up to 9% for every nearby enemy
+1H and Shield ability: Absorb Magic - 25% of max health (spell projectiles only)
+Undaunted ability: Bone Shield + morphs - 25% of max health (30% of max health to 4 nearby allies on synergy activation)
+The Steed CP Passive: Reinforced - 10% (?) of max health
+Psijic Order Passive: Concentrated Barrier - Up to 5000 while blocking
+Brands of Imperium - Up to 12040 for 6 seconds
+Iceheart - Up to 8600 for 6 seconds
+Combat Physician - Up to 8195 for 6 seconds
+```
+
+## Shield Mitigation
+
+We've already discussed resistances impacting shields. But what about the terms Mitigation.1, Mitigation.2, and Mitigation.N? What are these?
+
+These terms are sources of damage mitigation that are applied to the shield, before the block mitigation is taken into consideration. These are sources that provide any sort of damage mitigation that doesn't require you to block. Below you will find most of the different sources of mitigation that may be provided, along with their values for mitigation.
+
+```
+Major Maim - 0.7
+Minor Maim - 0.85
+Major Protection - 0.3
+Minor Protection - 0.08
+Major Aegis - 0.15 (dungeons & trials only)
+Minor Aegis - 0.05 (dungeons & trials only)
+Major Evasion - 0.25 (AoE only)
+Minor Evasion - 0.1 (AoE only)
+Nord Passive: Rugged - 0.06
+Vampire passive: Undeath - 0 to 0.33 (at max level, increases by 1 percent for every 1.5 percent health lost below 50 pecent [50/33])
+Hardy - 0 to 0.15 (Physical, Poison, Disease)
+Elemental Defender - 0 to 0.15 (Magic, Shock, Flame, Frost)
+Thick Skinned - 0 to 0.25 (DoTs)
+Ironclad - 0 to 0.25 (Direct damage)
+Expert Defender - 0 to 0.35 (Light and Heavy Attacks in PvP)
+Guard - 0.3
+```
+
+## Block Mitigation
+
+Once the above mitigation factors have been taken into account and your shield appropriately affected, if there is still remaining damage and your shield is depleted, then the next stage of mitigation starts: blocking.
+
+These terms are any source of mitigation that has the term "while blocking" applied to it. These are generally rarer and less frequently found on DPS, but tanks have several sources of these terms, most of which are found below.
+
+```
+Blocking - 0.5
+1H and Shield passive: Sword and Board - 0.2
+1H and Shield passive: Deflect Bolt - 0.15 (projectiles only)
+1H and Shield ability: Defensive Stances - Up to 0.1
+Destruction Staff passive: Ancient Knowlege - 0.2 (Frost Staff only)
+Dragonknight passive: Iron Skin - 0.1
+Sorcerer ability: Bound Armor + Bound Aegis - Up to  0.4
+```
+## Sources of Vulnerability
+
+Generally speaking, in PvE, you, as the player, will only ever be affected by two main sources of vulnerability: Minor Vulnerability from some Shock Damage sources and up to 25 percent more Flame Damage if you are a vampire. There are a few more sources of vulnerabilities, but they are not usually applied to the player. Sources of vulnerabilities are below with their modifiers.
+
+```
+Minor Vulnerability -  0.08
+Major Vulnerability - 0.3
+Vampirism - Up to 0.25, depending on stage (Flame Damage only)
+Werewolf - 0.25 when transformed (Poison Damage only)
+Morag Tong - 0.1 (Poison Damage only)
+Dragonknight Ability: Engulfing Flames - Up to 0.1 (Flame Damage only)
+```
+# Examples
+
+In this section, we'll provide examples of how much damage you can anticipate taking under certain scenarios.
+
+## Typical Tank Set-up
+
+In this scenario, we are assuming that we are on a Dragonknight with max resistances, Minor Maim, Minor Protection, 81 points into Ironclad, 75 points into Hardy/Elemental Defender, we are blocking using a shield, and we have Igneous Shield up with 40k max health and no points into Bastion. We'll be blocking a base hit of 150000. Since we have no vulnerabilities, we can multiply all of our mitigations.
+
+```{r}
+base <- 150000
+resist <- (100 - (33000/660)) * 0.01
+block <- 0.5
+block.1 <- 0.2
+block.2 <- 0.1
+shield <- 40000 * 0.24
+maim <- 0.85
+protect <- 0.08
+hardy <- 0.14
+ironclad <- 0.24
+
+((base * (resist * maim * (1 - hardy) * (1 - protect) * (1 - ironclad)) - shield) * block * (1 - (block.1 + block.2)))
+```
+
+## Tank Misses a Block
+
+Same assumptions as above, but our tank missed a block!
+
+```{r}
+((base * (resist * maim * (1 - hardy) * (1 - protect) * (1 - ironclad)) - shield))
+```
+
+## Tank Lost Taunt and Boss is on a DPS
+
+Our tank is dead or lost the taunt, and now our DPS needs to eat a hit from the boss! In this scenario, we're going to be using Dampen Magic with a max health of 20k (we have Ebon + Minor Toughness). We came a bit prepared, with 81 points into Ironclad, and nothing into Hardy. We do not have Minor Protection, but Minor Maim from Heroic Slash is still present. We're really trying to survive, so we're blocking as well. We only have around 15000 resistances though.
+
+```{r}
+shield <- 20000 * 0.6
+resist <- (100 - (15000/660)) * 0.01
+((base * (resist * maim * (1 - ironclad)) - shield) * block)
+```
+
+## Everyone's been affected by Minor Vulnerability!
+
+Let's say we're fighting a boss that deals Shock Damage. This means we can be affected by Minor Vulnerability. So how does this work out? Remember: vulnerabilities are subtracted out of mitigation until there is no vulnerability remaining. At that point, any remaining mitigation becomes multiplicative again. Here, the math is simple since we have Minor Protection as a tank, so those cancel. But what about on a DPS? Well, here we would just have to add in our points from Ironclad to get our final result.
+
+```{r}
+vuln <- 0.08
+
+resist <- (100 - (33000/660)) * 0.01
+((base * (resist * maim * (1 - protect + vuln) * (1 - hardy) * (1 - ironclad)) - shield) * block * (1 - (block.1 + block.2)))
+
+resist <- (100 - (15000/660)) * 0.01
+((base * (resist * maim * (1 - ironclad + vuln)) - shield) * block)
+```
+
+## What's the highest Base Damage a DPS can take?
+
+If we know our damage calculation, we can work backwards to figure out what the highest base damage hit you can take before it's a 1-shot. So instead of starting with our base, we're going to work backwards to get it. Here's the general formula for that.
+
+```
+Damage taken = ((Base Damage * Mitigation) - Shields) * Block * (1 - (Block.Mitigation.1 + Block.Mitigation.2 + ... + Block.Mitigation.N))
+
+**Replace Damage Taken with Max Health**
+
+Max Health = ((Base Damage * Mitigation) - Shields) * Block * (1 - (Block.Mitigation.1 + Block.Mitigation.2 + ... + Block.Mitigation.N))
+
+**Divide by Block Mitigation first**
+
+Max Health /  (Block * (1 - (Block.Mitigation.1 + Block.Mitigation.2 + ... + Block.Mitigation.N))) = Base Damage * Mitigation - Shields
+
+**Add Shields to the left hand side**
+
+Max Health /  (Block * (1 - (Block.Mitigation.1 + Block.Mitigation.2 + ... + Block.Mitigation.N))) + Shields = Base Damage * Mitigation
+
+**Divide by mitigation**
+
+Base Damage = (Max Health /  (Block * (1 - (Block.Mitigation.1 + Block.Mitigation.2 + ... + Block.Mitigation.N))) + Shields) / Mitigation
+```
+
+So now that we have that, let's work our way backwards for a typical magicka DPS. Same assumptions as the previous example.
+
+```{r}
+health <- 20000
+((health / block) + shield) / (resist * maim * (1 - ironclad) * (1 - hardy))
+```
+
+# How does this compare prior to Scalebreaker?
+
+With mitigation and vulnerability sources now interacting additively with each other (with the exception of Maim), in general, the damage you're taking has gone up slightly if there are sources of vulnerability present. In some trials and dungeons, this will be the case, as all sources of Shock Damage and certain boss moves can apply Minor Vulnerability. For vampire or werewolf players, you have sources of vulnerability for specific types of damage.
+
+However, for most content, this should not affect how much damage you will be taking. 
+
+## Example of Increase Damage
+
+Here is just a numerical representation of the amount of increased damage you would take with the new formulation compared to the old.
+
+```{r}
+#New formula as a DPS
+((base * (resist * maim * (1 - ironclad + vuln)) - shield) * block)
+
+#Old formula as a DPS
+((base * (resist * maim * (1 - ironclad)) - shield) * block) * (1 + vuln)
+
+resist <- (100 - (33000/660)) * 0.01
+#New formula as a tank
+((base * (resist * maim * (1 - protect + vuln) * (1 - hardy) * (1 - ironclad)) - shield) * block * (1 - (block.1 + block.2)))
+
+#Old formula as a tank
+((base * (resist * maim * (1 - protect) * (1 - hardy) * (1 - ironclad)) - shield) * block * (1 - block.1) * (1 - block.2)) * (1 + vuln)
+```
+
+As we can see, not a huge increase; in this instance, we're taking only an additional 1426 damage as a DPS and about 145 extra damage as a tank. Not really significant, though it would still be a one-shot for our DPS! 
+
+# Appendix: Critical Resistance
+
+Critical resistance is not important for PvE, but we will still discuss it for the PvP players. Crit resistance operates differently than Spell and Physical resistance in that is decreases the crit modifier, rather than the damage you take. The standard crit modifier for a player is 1.5; in other words, if you crit, you will do at least 50 percent more damage. Crit resistance decreases that crit modifier by a certain amount, detailed below.
+
+```
+Crit Modifier = 1.5 + Crit.Buff.1 + Crit.Buff.2 + ... + Crit.Buff.3 - (Crit.Resist/68/100)
+```
+
+So, for example, if you have a crit resistance of 2000, you would reduce the crit modifier of anyone who crits on you by 2000/68/100 = 0.294. Sources of crit resistance are listed below.
+
+```
+Impregnable Armor - Up to 2000 (0.294)
+Robes of Transmutation- Up to 1304 (0.191)
+Impenetrable Trait - Up to 258 per piece (0.038)
+CP Passive: Resistant - Up to 1650 (0.242)
+```
